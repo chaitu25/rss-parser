@@ -1,15 +1,22 @@
 package main
 
 import (
+	"database/sql"
 	"fmt"
 	"log"
 	"net/http"
 	"os"
 
+	"github.com/chaitu25/rss-aggregator/internal/database"
 	"github.com/go-chi/chi"
 	"github.com/go-chi/cors"
 	"github.com/joho/godotenv"
+	_ "github.com/lib/pq"
 )
+
+type apiConfig struct {
+	db *database.Queries
+}
 
 func main() {
 	// Create a new instance of the server
@@ -22,6 +29,18 @@ func main() {
 	if port == "" {
 		log.Fatal("No PORT environment variable detected")
 	}
+
+	dbUrl := os.Getenv("DB_URL")
+	if dbUrl == "" {
+		log.Fatal("No DB URL environment variable detected")
+	}
+
+	con, err := sql.Open("postgres", dbUrl)
+	if err != nil {
+		log.Fatal(err)
+	}
+	queries := database.New(con)
+	dbConfig := apiConfig{db: queries}
 
 	router := chi.NewRouter()
 
@@ -37,6 +56,9 @@ func main() {
 	v1Router := chi.NewRouter()
 	v1Router.Get("/healthz", handlerReadiness)
 	v1Router.Get("/error", handlerError)
+	v1Router.Post("/users", dbConfig.handlerCreateUser)
+	v1Router.Get("/users", dbConfig.middlewareAuth(dbConfig.handlerGetUserByApiKey))
+	v1Router.Post("/feeds", dbConfig.middlewareAuth(dbConfig.handleCreateFeed))
 	router.Mount("/v1", v1Router)
 
 	srv := &http.Server{

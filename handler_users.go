@@ -38,5 +38,16 @@ func (config *apiConfig) handlerCreateUser(w http.ResponseWriter, r *http.Reques
 
 func (config *apiConfig) handlerGetUserByApiKey(w http.ResponseWriter, r *http.Request, user database.User) {
 
-	respondWithJson(w, http.StatusCreated, user)
+	respondWithJson(w, http.StatusOK, user)
+}
+
+func (config *apiConfig) handlerGetPostsByUser(w http.ResponseWriter, r *http.Request, user database.User) {
+	posts, err := config.db.GetPostsForUser(r.Context(), database.GetPostsForUserParams{
+		UserID: user.ID,
+		Limit:  5,
+	})
+	if err != nil {
+		respondWithError(w, http.StatusInternalServerError, "Failed to fetch latest posts")
+	}
+	respondWithJson(w, http.StatusOK, databasePostsToPosts(posts))
 }

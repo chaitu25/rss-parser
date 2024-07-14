@@ -4,6 +4,7 @@ import (
 	"time"
 
 	"github.com/chaitu25/rss-aggregator/internal/database"
+	"github.com/google/uuid"
 )
 
 type User struct {
@@ -21,6 +22,25 @@ type Feed struct {
 	CreatedAt time.Time `json:"created_at"`
 	UpdatedAt time.Time `json:"updated_at"`
 	UserID    string    `json:"user_id"`
+}
+
+type FeedFollower struct {
+	ID        string    `json:"id"`
+	CreatedAt time.Time `json:"created_at"`
+	UpdatedAt time.Time `json:"updated_at"`
+	UserID    string    `json:"user_id"`
+	FeedID    string    `json:"feed_id"`
+}
+
+type Post struct {
+	ID          uuid.UUID `json:"id"`
+	CreatedAt   time.Time `json:"created_at"`
+	UpdatedAt   time.Time `json:"updated_at"`
+	Tile        string    `json:"title"`
+	Description *string   `json:"description"`
+	PublishedAt time.Time `json:"published_at"`
+	Url         *string   `json:"url"`
+	FeedID      uuid.UUID `json:"feed_id"`
 }
 
 func databaseUserToUser(dbUser database.User) User {
@@ -42,4 +62,45 @@ func databaseFeedToFeed(dbFeed database.Feed) Feed {
 		UpdatedAt: dbFeed.UpdatedAt,
 		UserID:    dbFeed.UserID.String(),
 	}
+}
+
+func databaseFeedFollowerToFeedFollower(dbFeedFollower database.FeedFollower) FeedFollower {
+	return FeedFollower{
+		ID:        dbFeedFollower.ID.String(),
+		CreatedAt: dbFeedFollower.CreatedAt,
+		UpdatedAt: dbFeedFollower.UpdatedAt,
+		UserID:    dbFeedFollower.UserID.String(),
+		FeedID:    dbFeedFollower.FeedID.String(),
+	}
+}
+
+func databaseFeedFollowersToFeedFollowers(dbFeedFollower []database.FeedFollower) []FeedFollower {
+	followers := make([]FeedFollower, 0)
+	for _, v := range dbFeedFollower {
+
+		followers = append(followers, databaseFeedFollowerToFeedFollower(v))
+	}
+	return followers
+}
+
+func databasePostToPost(post database.Post) Post {
+	return Post{
+		ID:          post.ID,
+		CreatedAt:   post.CreatedAt,
+		UpdatedAt:   post.UpdatedAt,
+		Tile:        post.Tile,
+		Description: &post.Description.String,
+		PublishedAt: post.PublishedAt,
+		Url:         &post.Url.String,
+		FeedID:      post.FeedID.UUID,
+	}
+}
+
+func databasePostsToPosts(posts []database.Post) []Post {
+	followers := make([]Post, 0)
+	for _, v := range posts {
+
+		followers = append(followers, databasePostToPost(v))
+	}
+	return followers
 }

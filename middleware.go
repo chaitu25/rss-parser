@@ -12,7 +12,6 @@ type authorizedHandler func(w http.ResponseWriter, r *http.Request, user databas
 func (config *apiConfig) middlewareAuth(next authorizedHandler) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		apiKey, err := auth.GetAPIKey(r.Header)
-
 		if err != nil {
 			respondWithError(w, http.StatusUnauthorized, "Not Authorized to read user")
 			return
